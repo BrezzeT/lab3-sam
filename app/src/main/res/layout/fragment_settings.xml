@@ -4,7 +4,8 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="32dp"
-    android:background="#F5F5F5">
+    android:background="#F5F5F5"
+    android:gravity="center_vertical">
 
     <TextView
         android:id="@+id/tv_settings_title"
@@ -14,24 +15,43 @@
         android:textSize="32sp"
         android:textStyle="bold"
         android:textColor="#6200EE"
+        android:layout_gravity="center_horizontal"
         android:layout_marginBottom="48dp" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/timezone"
-        android:textSize="20sp"
-        android:textColor="#212121"
-        android:layout_marginBottom="16dp" />
-
-    <Spinner
-        android:id="@+id/spinner_timezone"
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="16dp"
         android:background="#FFFFFF"
-        android:elevation="2dp"
-        android:layout_marginBottom="32dp" />
+        android:padding="24dp"
+        android:elevation="4dp"
+        android:layout_marginBottom="24dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/timezone"
+                android:textSize="20sp"
+                android:textColor="#212121"
+                android:textStyle="bold"
+                android:layout_marginBottom="16dp" />
+
+            <Spinner
+                android:id="@+id/spinner_timezone"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="16dp"
+                android:minHeight="56dp"
+                android:background="#F5F5F5"
+                android:elevation="1dp" />
+
+        </LinearLayout>
+
+    </FrameLayout>
 
     <TextView
         android:layout_width="wrap_content"
@@ -39,7 +59,8 @@
         android:text="@string/select_timezone"
         android:textSize="16sp"
         android:textColor="#757575"
-        android:layout_marginTop="16dp" />
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="8dp" />
 
 </LinearLayout>
 

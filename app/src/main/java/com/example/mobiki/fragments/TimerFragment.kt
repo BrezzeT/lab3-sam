@@ -1,21 +1,20 @@
 package com.example.mobiki.fragments
 
-import android.content.ComponentName
-import android.content.Context
-import android.content.ServiceConnection
 import android.os.Bundle
-import android.os.IBinder
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.LinearLayout
+import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.fragment.app.Fragment
-import com.example.mobiki.MainActivity
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.Observer
 import com.example.mobiki.R
+import com.example.mobiki.service.TimerHandlerThread
 import com.example.mobiki.service.TimerObserver
-import com.example.mobiki.service.TimerService
+import com.example.mobiki.viewmodel.TimerViewModel
 import java.util.Locale
 
 class TimerFragment : Fragment(), TimerObserver {
@@ -27,34 +26,13 @@ class TimerFragment : Fragment(), TimerObserver {
     private lateinit var lapButton: Button
     private lateinit var lapsContainer: LinearLayout
     private lateinit var lapsTitle: TextView
+    private lateinit var syncProgressText: TextView
+    private lateinit var syncProgressBar: ProgressBar
     
-    private var timerService: TimerService? = null
-    private var isServiceBound = false
+    private val viewModel: TimerViewModel by viewModels()
+    private var timerThread: TimerHandlerThread? = null
     private val laps = mutableListOf<Long>()
     private var lastLapTime: Long = 0
-    
-    private val serviceConnection = object : ServiceConnection {
-        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-            val binder = service as TimerService.TimerBinder
-            timerService = binder.getService()
-            isServiceBound = true
-            timerService?.registerObserver(this@TimerFragment)
-            // Update UI with current state
-            activity?.runOnUiThread {
-                val isRunning = timerService?.isTimerRunning() ?: false
-                val isPaused = timerService?.isTimerPaused() ?: false
-                if (isRunning || isPaused) {
-                    timeDisplay.text = formatTime(timerService?.getCurrentTime() ?: 0)
-                }
-                updateButtonStates(isRunning, isPaused)
-            }
-        }
-        
-        override fun onServiceDisconnected(name: ComponentName?) {
-            timerService = null
-            isServiceBound = false
-        }
-    }
     
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -74,36 +52,84 @@ class TimerFragment : Fragment(), TimerObserver {
         lapButton = view.findViewById(R.id.btn_lap)
         lapsContainer = view.findViewById(R.id.ll_laps_container)
         lapsTitle = view.findViewById(R.id.tv_laps_title)
+        syncProgressText = view.findViewById(R.id.tv_sync_progress)
+        syncProgressBar = view.findViewById(R.id.progress_sync)
         
+        // Ініціалізуємо HandlerThread
+        timerThread = TimerHandlerThread().apply {
+            start()
+        }
+        timerThread?.registerObserver(this)
+        
+        // Спостерігаємо за LiveData з ViewModel
+        observeViewModel()
+        
+        // Налаштування кнопок
+        setupButtons()
+        
+        updateLapsDisplay()
+        
+        // Встановлюємо максимальний час синхронізації (60 секунд)
+        viewModel.setMaxSyncTime(60000)
+    }
+    
+    private fun observeViewModel() {
+        // Спостерігаємо за часом таймера
+        viewModel.elapsedTime.observe(this, Observer { time ->
+            timeDisplay.text = formatTime(time)
+        })
+        
+        // Спостерігаємо за станом таймера
+        viewModel.isRunning.observe(this, Observer { running ->
+            updateButtonStates(running, viewModel.isPaused.value ?: false)
+        })
+        
+        viewModel.isPaused.observe(this, Observer { paused ->
+            updateButtonStates(viewModel.isRunning.value ?: false, paused)
+        })
+        
+        // Спостерігаємо за прогресом синхронізації
+        viewModel.syncProgress.observe(this, Observer { progress ->
+            syncProgressBar.progress = progress
+            syncProgressText.text = getString(R.string.sync_progress, progress)
+        })
+        
+        // Спостерігаємо за повідомленнями
+        viewModel.statusMessage.observe(this, Observer { message ->
+            if (message.isNotEmpty()) {
+                // Можна показати Toast або інше повідомлення
+            }
+        })
+    }
+    
+    private fun setupButtons() {
         startButton.setOnClickListener {
-            // If timer was stopped, reset laps
-            val wasStopped = !(timerService?.isTimerRunning() ?: false) && !(timerService?.isTimerPaused() ?: false)
+            val wasStopped = !(timerThread?.isTimerRunning() ?: false) && !(timerThread?.isTimerPaused() ?: false)
             if (wasStopped) {
                 clearLaps()
                 lastLapTime = 0
+                viewModel.setMaxSyncTime(60000) // Скидаємо максимальний час
             }
-            timerService?.startTimer()
-            // Force update button states immediately
-            val isRunning = timerService?.isTimerRunning() ?: false
-            val isPaused = timerService?.isTimerPaused() ?: false
-            updateButtonStates(isRunning, isPaused)
+            timerThread?.startTimer()
         }
         
         stopButton.setOnClickListener {
-            timerService?.stopTimer()
+            timerThread?.stopTimer()
             clearLaps()
+            viewModel.updateElapsedTime(0)
+            viewModel.setSyncProgress(0)
         }
         
         pauseButton.setOnClickListener {
-            if (timerService?.isTimerPaused() == true) {
-                timerService?.startTimer() // Resume
+            if (timerThread?.isTimerPaused() == true) {
+                timerThread?.startTimer() // Resume
             } else {
-                timerService?.pauseTimer()
+                timerThread?.pauseTimer()
             }
         }
         
         lapButton.setOnClickListener {
-            val currentTime = timerService?.getCurrentTime() ?: 0
+            val currentTime = timerThread?.getCurrentTime() ?: 0
             if (currentTime > 0) {
                 val lapTime = currentTime - lastLapTime
                 laps.add(lapTime)
@@ -111,77 +137,35 @@ class TimerFragment : Fragment(), TimerObserver {
                 updateLapsDisplay()
             }
         }
-        
-        // Try to get service from MainActivity
-        val mainActivity = activity as? MainActivity
-        timerService = mainActivity?.getTimerService()
-        if (timerService != null) {
-            timerService?.registerObserver(this)
-            // Update UI with current state
-            val isRunning = timerService?.isTimerRunning() ?: false
-            val isPaused = timerService?.isTimerPaused() ?: false
-            if (isRunning || isPaused) {
-                timeDisplay.text = formatTime(timerService?.getCurrentTime() ?: 0)
-            }
-            updateButtonStates(isRunning, isPaused)
-        } else {
-            // Bind to service if not available
-            val intent = android.content.Intent(requireContext(), TimerService::class.java)
-            requireContext().bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
-            // Set initial state
-            updateButtonStates(false, false)
-        }
-        
-        updateLapsDisplay()
-    }
-    
-    fun onServiceConnected(service: TimerService) {
-        timerService = service
-        service.registerObserver(this)
-        // Update UI with current state
-        val isRunning = service.isTimerRunning()
-        val isPaused = service.isTimerPaused()
-        if (isRunning || isPaused) {
-            timeDisplay.text = formatTime(service.getCurrentTime())
-        }
-        updateButtonStates(isRunning, isPaused)
     }
     
     override fun onTimerUpdate(elapsedTime: Long) {
-        activity?.runOnUiThread {
-            timeDisplay.text = formatTime(elapsedTime)
-        }
+        viewModel.updateElapsedTime(elapsedTime)
     }
     
     override fun onTimerStateChanged(isRunning: Boolean, isPaused: Boolean) {
-        activity?.runOnUiThread {
-            updateButtonStates(isRunning, isPaused)
-            if (!isRunning && !isPaused) {
-                // Timer stopped
-                timeDisplay.text = formatTime(0)
-                lastLapTime = 0
-            } else if (isRunning && !isPaused && lastLapTime == 0L) {
-                // Timer just started - initialize lastLapTime to 0 for first lap
-                lastLapTime = 0
-            }
+        viewModel.setRunning(isRunning)
+        viewModel.setPaused(isPaused)
+        
+        if (!isRunning && !isPaused) {
+            viewModel.updateElapsedTime(0)
+            viewModel.setSyncProgress(0)
+            lastLapTime = 0
         }
     }
     
     private fun updateButtonStates(isRunning: Boolean, isPaused: Boolean) {
-        // Update button states
         startButton.isEnabled = !isRunning || isPaused
         stopButton.isEnabled = isRunning || isPaused
         pauseButton.isEnabled = isRunning || isPaused
         lapButton.isEnabled = isRunning && !isPaused
         
-        // Update button text
         if (isPaused) {
             pauseButton.text = getString(R.string.resume)
         } else {
             pauseButton.text = getString(R.string.pause)
         }
         
-        // Force refresh
         startButton.invalidate()
         stopButton.invalidate()
         pauseButton.invalidate()
@@ -208,8 +192,17 @@ class TimerFragment : Fragment(), TimerObserver {
             val lapView = TextView(requireContext()).apply {
                 text = "Коло ${index + 1}: ${formatTime(lapTime)}"
                 textSize = 16f
-                setPadding(32, 16, 32, 16)
+                setTextColor(0xFF212121.toInt())
+                setPadding(24, 18, 24, 18)
+                setBackgroundColor(0xFFF5F5F5.toInt())
             }
+            val layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                bottomMargin = 8
+            }
+            lapView.layoutParams = layoutParams
             lapsContainer.addView(lapView)
         }
     }
@@ -230,11 +223,8 @@ class TimerFragment : Fragment(), TimerObserver {
     
     override fun onDestroyView() {
         super.onDestroyView()
-        timerService?.unregisterObserver(this)
-        if (isServiceBound) {
-            requireContext().unbindService(serviceConnection)
-            isServiceBound = false
-        }
+        timerThread?.unregisterObserver(this)
+        timerThread?.quitSafely()
+        timerThread = null
     }
 }
-

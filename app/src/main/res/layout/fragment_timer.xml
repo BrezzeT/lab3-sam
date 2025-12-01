@@ -19,25 +19,55 @@
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="48dp"
+        android:layout_marginBottom="24dp"
         android:background="#FFFFFF"
         android:padding="24dp"
         android:elevation="4dp">
 
-        <TextView
-            android:id="@+id/tv_timer_display"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="00:00.00"
-            android:textSize="56sp"
-            android:textColor="#6200EE"
-            android:textStyle="bold"
-            android:gravity="center"
-            android:fontFamily="monospace"
-            android:singleLine="true"
-            android:ellipsize="none"
-            android:maxLines="1"
-            android:minHeight="80dp" />
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tv_timer_display"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="00:00.00"
+                android:textSize="56sp"
+                android:textColor="#6200EE"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:fontFamily="monospace"
+                android:singleLine="true"
+                android:ellipsize="none"
+                android:maxLines="1"
+                android:minHeight="80dp"
+                android:layout_marginBottom="16dp" />
+
+            <TextView
+                android:id="@+id/tv_sync_progress"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/sync_progress"
+                android:textSize="14sp"
+                android:textColor="#757575"
+                android:layout_gravity="center"
+                android:layout_marginBottom="12dp" />
+
+            <ProgressBar
+                android:id="@+id/progress_sync"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="8dp"
+                android:max="100"
+                android:progress="0"
+                android:progressTint="#6200EE"
+                android:progressBackgroundTint="#E0E0E0"
+                android:minHeight="8dp"
+                android:maxHeight="8dp" />
+
+        </LinearLayout>
 
     </FrameLayout>
 
@@ -46,30 +76,33 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center"
-        android:layout_marginBottom="16dp">
+        android:layout_marginBottom="12dp">
 
         <Button
             android:id="@+id/btn_start"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:layout_marginEnd="4dp"
+            android:layout_marginEnd="6dp"
             android:text="@string/start"
             android:textSize="16sp"
-            android:padding="16dp"
-            android:backgroundTint="#4CAF50" />
+            android:textColor="#FFFFFF"
+            android:padding="18dp"
+            android:backgroundTint="#4CAF50"
+            android:elevation="2dp" />
 
         <Button
             android:id="@+id/btn_stop"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:layout_marginStart="4dp"
-            android:layout_marginEnd="4dp"
+            android:layout_marginStart="6dp"
             android:text="@string/stop"
             android:textSize="16sp"
-            android:padding="16dp"
-            android:backgroundTint="#F44336" />
+            android:textColor="#FFFFFF"
+            android:padding="18dp"
+            android:backgroundTint="#F44336"
+            android:elevation="2dp" />
 
     </LinearLayout>
 
@@ -85,22 +118,26 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:layout_marginEnd="4dp"
+            android:layout_marginEnd="6dp"
             android:text="@string/pause"
             android:textSize="16sp"
-            android:padding="16dp"
-            android:backgroundTint="#FF9800" />
+            android:textColor="#FFFFFF"
+            android:padding="18dp"
+            android:backgroundTint="#FF9800"
+            android:elevation="2dp" />
 
         <Button
             android:id="@+id/btn_lap"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:layout_marginStart="4dp"
+            android:layout_marginStart="6dp"
             android:text="@string/lap"
             android:textSize="16sp"
-            android:padding="16dp"
-            android:backgroundTint="#2196F3" />
+            android:textColor="#FFFFFF"
+            android:padding="18dp"
+            android:backgroundTint="#2196F3"
+            android:elevation="2dp" />
 
     </LinearLayout>
 
@@ -109,7 +146,7 @@
         android:layout_height="0dp"
         android:layout_weight="1"
         android:background="#FFFFFF"
-        android:padding="16dp"
+        android:padding="20dp"
         android:elevation="2dp">
 
         <LinearLayout
@@ -129,13 +166,16 @@
 
             <ScrollView
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
+                android:layout_height="match_parent"
+                android:scrollbars="vertical"
+                android:fadeScrollbars="true">
 
                 <LinearLayout
                     android:id="@+id/ll_laps_container"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical" />
+                    android:orientation="vertical"
+                    android:padding="4dp" />
 
             </ScrollView>
 

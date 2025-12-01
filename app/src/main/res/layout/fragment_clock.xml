@@ -81,9 +81,16 @@
             android:layout_weight="1"
             android:layout_marginEnd="8dp"
             android:text="@string/timer"
-            android:textSize="16sp"
+            android:textSize="14sp"
+            android:textColor="#FFFFFF"
             android:padding="16dp"
-            android:backgroundTint="#03DAC5" />
+            android:minHeight="60dp"
+            android:minWidth="0dp"
+            android:singleLine="true"
+            android:ellipsize="none"
+            android:gravity="center"
+            android:backgroundTint="#03DAC5"
+            android:elevation="2dp" />
 
         <Button
             android:id="@+id/btn_settings"
@@ -92,9 +99,16 @@
             android:layout_weight="1"
             android:layout_marginStart="8dp"
             android:text="@string/settings"
-            android:textSize="16sp"
+            android:textSize="14sp"
+            android:textColor="#FFFFFF"
             android:padding="16dp"
-            android:backgroundTint="#6200EE" />
+            android:minHeight="60dp"
+            android:minWidth="0dp"
+            android:singleLine="true"
+            android:ellipsize="none"
+            android:gravity="center"
+            android:backgroundTint="#6200EE"
+            android:elevation="2dp" />
 
     </LinearLayout>
 

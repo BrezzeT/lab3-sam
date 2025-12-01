@@ -12,4 +12,5 @@
     <string name="select_timezone">Виберіть часовий пояс</string>
     <string name="laps">Кола:</string>
     <string name="no_laps">Немає кіл</string>
+    <string name="sync_progress">Прогрес синхронізації: %d%%</string>
 </resources>
