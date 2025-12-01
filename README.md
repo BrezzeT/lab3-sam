@@ -63,18 +63,6 @@ app/
 - Kotlin
 - AndroidX Libraries
 
-## Встановлення
-
-1. Клонуйте репозиторій:
-```bash
-git clone https://github.com/BrezzeT/lab2-mob.git
-```
-
-2. Відкрийте проект в Android Studio
-
-3. Синхронізуйте Gradle (File → Sync Project with Gradle Files)
-
-4. Запустіть на пристрої або емуляторі
 
 ## Особливості реалізації
 
